@@ -16,10 +16,8 @@ const saveKey = () => {
     if (input) {
         const { value } = input;
 
-        // Encode String
         const encodeValue = encode(value);
 
-        // Save to google storage
         chrome.storage.local.set({ "openai-key" : encodeValue}, () => {
             document.getElementById("key_needed").style.display = "none";
             document.getElementById("key_entered").style.display = "block";

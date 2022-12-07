@@ -33,7 +33,7 @@ const generate = async (prompt) => {
 
     // Select the top choice and send back
     const completion = await completionResponse.json();
-    return completion.choises.pop();
+    return completion.choices.pop();
 }
 
 // Function here
