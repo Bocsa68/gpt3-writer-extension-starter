@@ -39,9 +39,6 @@ const generate = async (prompt) => {
 // Function here
 const generateCompletionAction = async (info) => {
     try {
-        // Send message with generation text (loading indicator)
-        sendMessage("generating...");
-
         const { selectionText } = info;
         const basePromptPrefix = `Write a professional and courteous email reply to this sender.
         Title: `;
@@ -56,11 +53,14 @@ const generateCompletionAction = async (info) => {
     }
 };
 
-chrome.contextMenus.create({
-    id: 'context-run',
-    title: 'Generate Email Reply',
-    contexts: ['selection'],
-});
+// Update to fix duplicate id error.
+chrome.runtime.onInstalled.addListener(() =>{
+    chrome.contextMenus.create({
+        id: 'context-run',
+        title: 'Generate Email Reply',
+        contexts: ['selection'],
+    });
+})
 
 // Add listener
 chrome.contextMenus.onClicked.addListener(generateCompletionAction);
