@@ -1,3 +1,4 @@
+// Function to get + decode API key
 const getKey = () => {
     return new Promise((resolve, reject) =>{
         chrome.storage.local.get(['openai-key'], (result)=> {
@@ -9,10 +10,13 @@ const getKey = () => {
     });
 };
 
+// Setup our generate function
 const generate = async (prompt) => {
+    //Get you API key from storage
     const key = await getKey();
     const url = 'https://api.openai.com/v1/completions';
 
+    // Call completions endpoint
     const completionResponse = await fetch(url, {
         method: 'POST',
         headers: {
@@ -27,16 +31,22 @@ const generate = async (prompt) => {
         }),
     });
 
+    // Select the top choice and send back
     const completion = await completionResponse.json();
     return completion.choises.pop();
 }
 
+// Function here
 const generateCompletionAction = async (info) => {
     try {
+        // Send message with generation text (loading indicator)
+        sendMessage("generating...");
+
         const { selectionText } = info;
         const basePromptPrefix = `Write a professional and courteous email reply to this sender.
         Title: `;
 
+        // Add call to GPT-3
         const baseCompletion = await generate(`${basePromptPrefix}${selectionText}`);
 
     console.log(baseCompletion.text)
@@ -52,4 +62,5 @@ chrome.contextMenus.create({
     contexts: ['selection'],
 });
 
+// Add listener
 chrome.contextMenus.onClicked.addListener(generateCompletionAction);
