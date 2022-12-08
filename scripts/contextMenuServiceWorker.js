@@ -10,6 +10,24 @@ const getKey = () => {
     });
 };
 
+// Send message to the DOM
+const sendMessage = (content) => {
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) =>{
+        const activeTab = tabs[0].id;
+
+        chrome.tabs.sendMessage(
+            activeTab,
+            {message: 'inject', content},
+            (response) => {
+                if (response.status === 'failed') {
+                    console.log('injection failed.');
+                }
+            }
+        );
+    });
+};
+
+
 // Setup our generate function
 const generate = async (prompt) => {
     //Get you API key from storage
@@ -39,17 +57,39 @@ const generate = async (prompt) => {
 // Function here
 const generateCompletionAction = async (info) => {
     try {
+        // Send message with generating text (like loading indicator)
+        sendMessage('generating...');
+
         const { selectionText } = info;
-        const basePromptPrefix = `Write a professional and courteous email reply to this sender.
-        Title: `;
+        const basePromptPrefix = `Write me a list of menu suggestions for a meal based on these criteria.
+        Criteria: `;
 
         // Add call to GPT-3
         const baseCompletion = await generate(`${basePromptPrefix}${selectionText}`);
 
+        // Add Second prompt
+        const secondPrompt = `From the menu list below select one meal and generate a detailed recipe.
+        Criteria: ${selectionText}
+
+        Menu: ${baseCompletion}
+        
+        Recipe:
+        `;
+
+        // Call the second prompt
+        const secondPromptCompletion = await generate(secondPrompt);
+
+        // Send the output when we're complete
+        sendMessage(secondPromptCompletion.text);
+
     console.log(baseCompletion.text)
+    console.log(secondPromptCompletion.text)
 
     } catch (error) {
         console.log(error);
+
+        // Add message if we run into any errors!
+        sendMessage(error.toString());
     }
 };
 
@@ -57,7 +97,7 @@ const generateCompletionAction = async (info) => {
 chrome.runtime.onInstalled.addListener(() =>{
     chrome.contextMenus.create({
         id: 'context-run',
-        title: 'Generate Email Reply',
+        title: 'Generate Menu & Recipe',
         contexts: ['selection'],
     });
 })
